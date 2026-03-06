@@ -1,6 +1,3 @@
-/*
-    闂佽娴烽幊鎾诲嫉椤掑嫬姹查柨婵嗩槹閸庡秹鏌涢弴銊ヤ航婵☆垰妫濋幃瑙勬媴閻熸澘濮㈤梺纭呮腹閸楁娊鐛埀顒勬煠婵劕鈧洖鈻撻悩宕囩闁哄鍩堥崕鎾绘煟?    婵犵數鍋炲娆擃敄閸儲鍎婇柣銈咁劍U闂傚倷绶￠崑鍛┍閾忚宕查柛鎰靛枛缁犳垿鏌ゆ慨鎰偓鏇炩枔閻樼粯鍋ｅù锝呮啞閸嬨儲淇婇銇渽M闂備線娼уΛ鏃傜箔閵栧嚘O缂傚倷鐒︾粙鎴λ囬鐐堝洭鎳￠妶鍡楊€?    闂備胶纭堕弲鐐差浖閵娧嗗С妞ゆ帊鑳堕々鏌ユ煛閸愩劌鈧潡鎮伴幘瀵哥缂傚牏濮烽崝宥夋煙缁嬫妲洪柣銉簽濞嗐垻绱為悮?
-*/
 `timescale 1ns/1ns
 `include "config.v"
 
@@ -8,6 +5,7 @@ module soc_peripheral_bus_tb;
     reg clk;
     reg rst_n;
     reg clk_timer;
+
     // Flash interface
     wire [`MAX_BIT_POS:0] digital_flash_addr;
     wire digital_flash_write_en;
@@ -16,6 +14,7 @@ module soc_peripheral_bus_tb;
     wire [7:0] digital_flash_wdata;
     reg [7:0] digital_flash_data;
     reg digital_flash_ready;
+
     // RAM interface
     wire [`MAX_BIT_POS:0] digital_mem_addr;
     wire digital_mem_write_en;
@@ -24,10 +23,15 @@ module soc_peripheral_bus_tb;
     wire [`MAX_BIT_POS:0] digital_mem_wdata;
     reg [`MAX_BIT_POS:0] digital_mem_data;
     reg digital_mem_ready;
+
     // GPIO interface
     wire [`GPIO_NUMS-1:0] gpio_values;
 
-    // 闂佽楠稿﹢閬嶅磻濡吋顐介柕澶嗘櫅缁€宀勬煛閸偅鐓廋
+    // Configuration
+    localparam integer NUM_ROUNDS    = 20;
+    localparam integer ROUND_RUNTIME = 15000;
+    localparam integer VERBOSE_TRACE = 0;
+
     digital_soc soc(
         .clk(clk),
         .rst_n(rst_n),
@@ -49,7 +53,7 @@ module soc_peripheral_bus_tb;
         .gpio_values(gpio_values)
     );
 
-    // Debug mirrors for register file values (easier to view in older Verdi).
+    // Debug mirrors for register file values.
     wire [`MAX_BIT_POS:0] dbg_x1;
     wire [`MAX_BIT_POS:0] dbg_x2;
     wire [`MAX_BIT_POS:0] dbg_x3;
@@ -114,96 +118,343 @@ module soc_peripheral_bus_tb;
     assign dbg_x30     = soc.cpu.cpu_pipeline.registers.reg_file[30];
     assign dbg_x31     = soc.cpu.cpu_pipeline.registers.reg_file[31];
 
-    // Flash婵犵妲呴崹顏堝礈濠靛牃鍋撳顓犳噰闁轰礁绉瑰畷濂告偄妞嬪孩鈻屽┑鐐差嚟婵即宕愰弴銏″仱闁靛ň鏅涚壕鍏笺亜椤撶喎绗х紒鈧?
+    // Program memory, expected values, and randomization state.
     reg [7:0] flash_mem [0:4095];
+    reg [31:0] expected_reg [0:31];
+    reg expected_valid [0:31];
+    reg [31:0] ram_mem [0:1023];
+
     integer i;
-    integer reg_idx;
+    integer round_idx;
+    integer round_pass_count;
+    integer round_fail_count;
+    integer seed;
     integer bus_write_cycles;
     reg saw_external_write;
+    reg round_failed;
 
-    initial begin
-        // Combined ISA + dirty write-back program:
-        // Covers add/sub/and/or/sll/srl/ori/addi/lw/sw/beq/bne/jal/jalr
-        // and forces dirty-line eviction (external write-back observed on bus).
+    integer reg_pool [0:9];
+    integer r_a, r_b, r_add, r_sub, r_and, r_or, r_shamt, r_sll, r_srl, r_ori;
+    integer val_a, val_b, shamt_v, ori_imm_v, mem_v;
+    integer val_x14, val_x15, val_x16, val_x18, val_x21;
+    integer val_x22, val_x23, val_x24, val_x25, val_x26;
 
-        flash_mem[0]   = 8'h13; flash_mem[1]   = 8'h02; flash_mem[2]   = 8'h90; flash_mem[3]   = 8'h00; // addi x4, x0, 9
-        flash_mem[4]   = 8'h93; flash_mem[5]   = 8'h01; flash_mem[6]   = 8'h40; flash_mem[7]   = 8'h00; // addi x3, x0, 4
-        flash_mem[8]   = 8'h33; flash_mem[9]   = 8'h01; flash_mem[10]  = 8'h32; flash_mem[11]  = 8'h00; // add  x2, x4, x3
-        flash_mem[12]  = 8'hb3; flash_mem[13]  = 8'h00; flash_mem[14]  = 8'h32; flash_mem[15]  = 8'h40; // sub  x1, x4, x3
-        flash_mem[16]  = 8'h33; flash_mem[17]  = 8'h73; flash_mem[18]  = 8'h32; flash_mem[19]  = 8'h00; // and  x6, x4, x3
-        flash_mem[20]  = 8'hb3; flash_mem[21]  = 8'h63; flash_mem[22]  = 8'h32; flash_mem[23]  = 8'h00; // or   x7, x4, x3
-        flash_mem[24]  = 8'h93; flash_mem[25]  = 8'h02; flash_mem[26]  = 8'h10; flash_mem[27]  = 8'h00; // addi x5, x0, 1
-        flash_mem[28]  = 8'h33; flash_mem[29]  = 8'h94; flash_mem[30]  = 8'h51; flash_mem[31]  = 8'h00; // sll  x8, x3, x5
-        flash_mem[32]  = 8'hb3; flash_mem[33]  = 8'h54; flash_mem[34]  = 8'h52; flash_mem[35]  = 8'h00; // srl  x9, x4, x5
-        flash_mem[36]  = 8'h13; flash_mem[37]  = 8'he5; flash_mem[38]  = 8'h81; flash_mem[39]  = 8'h01; // ori  x10, x3, 0x18
-        flash_mem[40]  = 8'h93; flash_mem[41]  = 8'h05; flash_mem[42]  = 8'h60; flash_mem[43]  = 8'h09; // addi x11, x0, 150
-        flash_mem[44]  = 8'h37; flash_mem[45]  = 8'h06; flash_mem[46]  = 8'h00; flash_mem[47]  = 8'h10; // lui  x12, 0x10000
-        flash_mem[48]  = 8'h23; flash_mem[49]  = 8'h20; flash_mem[50]  = 8'hb6; flash_mem[51]  = 8'h00; // sw   x11, 0(x12)
-        flash_mem[52]  = 8'h83; flash_mem[53]  = 8'h26; flash_mem[54]  = 8'h06; flash_mem[55]  = 8'h00; // lw   x13, 0(x12)
-        flash_mem[56]  = 8'h13; flash_mem[57]  = 8'h07; flash_mem[58]  = 8'h20; flash_mem[59]  = 8'h00; // addi x14, x0, 2
-        flash_mem[60]  = 8'h63; flash_mem[61]  = 8'h84; flash_mem[62]  = 8'hb6; flash_mem[63]  = 8'h00; // beq  x13, x11, +8
-        flash_mem[64]  = 8'h13; flash_mem[65]  = 8'h07; flash_mem[66]  = 8'h50; flash_mem[67]  = 8'h05; // addi x14, x0, 0x55 (skip)
-        flash_mem[68]  = 8'h93; flash_mem[69]  = 8'h07; flash_mem[70]  = 8'ha0; flash_mem[71]  = 8'h05; // addi x15, x0, 0x5A
-        flash_mem[72]  = 8'h63; flash_mem[73]  = 8'h94; flash_mem[74]  = 8'h26; flash_mem[75]  = 8'h00; // bne  x13, x2, +8
-        flash_mem[76]  = 8'h13; flash_mem[77]  = 8'h08; flash_mem[78]  = 8'h60; flash_mem[79]  = 8'h06; // addi x16, x0, 0x66 (skip)
-        flash_mem[80]  = 8'h13; flash_mem[81]  = 8'h08; flash_mem[82]  = 8'h90; flash_mem[83]  = 8'h09; // addi x16, x0, 0x99
-        flash_mem[84]  = 8'hef; flash_mem[85]  = 8'h08; flash_mem[86]  = 8'h80; flash_mem[87]  = 8'h00; // jal  x17, +8
-        flash_mem[88]  = 8'h13; flash_mem[89]  = 8'h09; flash_mem[90]  = 8'h10; flash_mem[91]  = 8'h01; // addi x18, x0, 0x11 (skip)
-        flash_mem[92]  = 8'h13; flash_mem[93]  = 8'h09; flash_mem[94]  = 8'h60; flash_mem[95]  = 8'h06; // addi x18, x0, 0x66
-        flash_mem[96]  = 8'h93; flash_mem[97]  = 8'h09; flash_mem[98]  = 8'h00; flash_mem[99]  = 8'h07; // addi x19, x0, 0x70
-        flash_mem[100] = 8'h67; flash_mem[101] = 8'h8a; flash_mem[102] = 8'h09; flash_mem[103] = 8'h00; // jalr x20, x19, 0
-        flash_mem[104] = 8'h93; flash_mem[105] = 8'h0a; flash_mem[106] = 8'h30; flash_mem[107] = 8'h03; // addi x21, x0, 0x33 (skip)
-        flash_mem[108] = 8'h6f; flash_mem[109] = 8'h00; flash_mem[110] = 8'h80; flash_mem[111] = 8'h00; // jal  x0, +8
-        flash_mem[112] = 8'h93; flash_mem[113] = 8'h0a; flash_mem[114] = 8'h80; flash_mem[115] = 8'h08; // addi x21, x0, 0x88
-        flash_mem[116] = 8'h13; flash_mem[117] = 8'h0b; flash_mem[118] = 8'h20; flash_mem[119] = 8'h01; // addi x22, x0, 0x12
-        flash_mem[120] = 8'h93; flash_mem[121] = 8'h0b; flash_mem[122] = 8'h40; flash_mem[123] = 8'h03; // addi x23, x0, 0x34
-        flash_mem[124] = 8'h13; flash_mem[125] = 8'h0c; flash_mem[126] = 8'h60; flash_mem[127] = 8'h05; // addi x24, x0, 0x56
-        flash_mem[128] = 8'h93; flash_mem[129] = 8'h0c; flash_mem[130] = 8'h80; flash_mem[131] = 8'h07; // addi x25, x0, 0x78
-        flash_mem[132] = 8'h13; flash_mem[133] = 8'h0d; flash_mem[134] = 8'ha0; flash_mem[135] = 8'h09; // addi x26, x0, 0x9A
-        flash_mem[136] = 8'h93; flash_mem[137] = 8'h0d; flash_mem[138] = 8'h06; flash_mem[139] = 8'h40; // addi x27, x12, 0x400
-        flash_mem[140] = 8'h13; flash_mem[141] = 8'h8e; flash_mem[142] = 8'h0d; flash_mem[143] = 8'h40; // addi x28, x27, 0x400
-        flash_mem[144] = 8'h93; flash_mem[145] = 8'h0e; flash_mem[146] = 8'h0e; flash_mem[147] = 8'h40; // addi x29, x28, 0x400
-        flash_mem[148] = 8'h13; flash_mem[149] = 8'h8f; flash_mem[150] = 8'h0e; flash_mem[151] = 8'h40; // addi x30, x29, 0x400
-        flash_mem[152] = 8'h23; flash_mem[153] = 8'h20; flash_mem[154] = 8'h66; flash_mem[155] = 8'h01; // sw   x22, 0(x12)
-        flash_mem[156] = 8'h23; flash_mem[157] = 8'h20; flash_mem[158] = 8'h66; flash_mem[159] = 8'h01; // sw   x22, 0(x12) hit
-        flash_mem[160] = 8'h23; flash_mem[161] = 8'ha0; flash_mem[162] = 8'h7d; flash_mem[163] = 8'h01; // sw   x23, 0(x27)
-        flash_mem[164] = 8'h23; flash_mem[165] = 8'ha0; flash_mem[166] = 8'h7d; flash_mem[167] = 8'h01; // sw   x23, 0(x27) hit
-        flash_mem[168] = 8'h23; flash_mem[169] = 8'h20; flash_mem[170] = 8'h8e; flash_mem[171] = 8'h01; // sw   x24, 0(x28)
-        flash_mem[172] = 8'h23; flash_mem[173] = 8'h20; flash_mem[174] = 8'h8e; flash_mem[175] = 8'h01; // sw   x24, 0(x28) hit
-        flash_mem[176] = 8'h23; flash_mem[177] = 8'ha0; flash_mem[178] = 8'h9e; flash_mem[179] = 8'h01; // sw   x25, 0(x29)
-        flash_mem[180] = 8'h23; flash_mem[181] = 8'ha0; flash_mem[182] = 8'h9e; flash_mem[183] = 8'h01; // sw   x25, 0(x29) hit
-        flash_mem[184] = 8'h23; flash_mem[185] = 8'h20; flash_mem[186] = 8'haf; flash_mem[187] = 8'h01; // sw   x26, 0(x30) -> evict dirty
-        flash_mem[188] = 8'h23; flash_mem[189] = 8'h20; flash_mem[190] = 8'haf; flash_mem[191] = 8'h01; // sw   x26, 0(x30) hit
-        flash_mem[192] = 8'h93; flash_mem[193] = 8'h0f; flash_mem[194] = 8'hf0; flash_mem[195] = 8'h0f; // addi x31, x0, 0xFF
-        flash_mem[196] = 8'h6f; flash_mem[197] = 8'h00; flash_mem[198] = 8'h00; flash_mem[199] = 8'h00; // jal  x0, 0
+    function [31:0] enc_i;
+        input [6:0] opcode;
+        input [4:0] rd;
+        input [2:0] funct3;
+        input [4:0] rs1;
+        input integer imm;
+        reg [11:0] imm12;
+    begin
+        imm12 = imm[11:0];
+        enc_i = {imm12, rs1, funct3, rd, opcode};
+    end
+    endfunction
 
-        // Fill remaining space with zeros
-        for (i = 200; i < 4096; i = i + 1) begin
-            flash_mem[i] = 8'h00;
+    function [31:0] enc_r;
+        input [6:0] opcode;
+        input [4:0] rd;
+        input [2:0] funct3;
+        input [4:0] rs1;
+        input [4:0] rs2;
+        input [6:0] funct7;
+    begin
+        enc_r = {funct7, rs2, rs1, funct3, rd, opcode};
+    end
+    endfunction
+
+    function [31:0] enc_s;
+        input [6:0] opcode;
+        input [2:0] funct3;
+        input [4:0] rs1;
+        input [4:0] rs2;
+        input integer imm;
+        reg [11:0] imm12;
+    begin
+        imm12 = imm[11:0];
+        enc_s = {imm12[11:5], rs2, rs1, funct3, imm12[4:0], opcode};
+    end
+    endfunction
+
+    function [31:0] enc_b;
+        input [6:0] opcode;
+        input [2:0] funct3;
+        input [4:0] rs1;
+        input [4:0] rs2;
+        input integer imm;
+        reg [12:0] imm13;
+    begin
+        imm13 = imm[12:0];
+        enc_b = {imm13[12], imm13[10:5], rs2, rs1, funct3, imm13[4:1], imm13[11], opcode};
+    end
+    endfunction
+
+    function [31:0] enc_u;
+        input [6:0] opcode;
+        input [4:0] rd;
+        input [19:0] imm20;
+    begin
+        enc_u = {imm20, rd, opcode};
+    end
+    endfunction
+
+    function [31:0] enc_j;
+        input [6:0] opcode;
+        input [4:0] rd;
+        input integer imm;
+        reg [20:0] imm21;
+    begin
+        imm21 = imm[20:0];
+        enc_j = {imm21[20], imm21[10:1], imm21[11], imm21[19:12], rd, opcode};
+    end
+    endfunction
+
+    task put_inst;
+        input integer idx;
+        input [31:0] inst;
+        integer base;
+    begin
+        base = idx * 4;
+        flash_mem[base + 0] = inst[7:0];
+        flash_mem[base + 1] = inst[15:8];
+        flash_mem[base + 2] = inst[23:16];
+        flash_mem[base + 3] = inst[31:24];
+    end
+    endtask
+
+    task clear_flash_mem;
+        integer k;
+    begin
+        for (k = 0; k < 4096; k = k + 1) begin
+            flash_mem[k] = 8'h00;
         end
     end
+    endtask
+
+    task clear_expected_regs;
+        integer k;
+    begin
+        for (k = 0; k < 32; k = k + 1) begin
+            expected_reg[k] = 32'h0;
+            expected_valid[k] = 1'b0;
+        end
+    end
+    endtask
+
+    task expect_reg;
+        input integer idx;
+        input [31:0] val;
+    begin
+        expected_reg[idx] = val;
+        expected_valid[idx] = 1'b1;
+    end
+    endtask
+
+    task rand_range;
+        input integer min_v;
+        input integer max_v;
+        output integer out_v;
+        integer span_v;
+        integer rand_v;
+    begin
+        span_v = max_v - min_v + 1;
+        rand_v = $random(seed);
+        if (rand_v < 0) begin
+            rand_v = -rand_v;
+        end
+        out_v = min_v + (rand_v % span_v);
+    end
+    endtask
+
+    task build_random_program;
+        integer add_sum;
+        integer swap_tmp;
+        integer pick_idx;
+        integer k;
+    begin
+        clear_flash_mem();
+        clear_expected_regs();
+
+        for (k = 0; k < 10; k = k + 1) begin
+            reg_pool[k] = k + 1;
+        end
+        for (k = 9; k > 0; k = k - 1) begin
+            rand_range(0, k, pick_idx);
+            swap_tmp = reg_pool[k];
+            reg_pool[k] = reg_pool[pick_idx];
+            reg_pool[pick_idx] = swap_tmp;
+        end
+
+        r_a     = reg_pool[0];
+        r_b     = reg_pool[1];
+        r_add   = reg_pool[2];
+        r_sub   = reg_pool[3];
+        r_and   = reg_pool[4];
+        r_or    = reg_pool[5];
+        r_shamt = reg_pool[6];
+        r_sll   = reg_pool[7];
+        r_srl   = reg_pool[8];
+        r_ori   = reg_pool[9];
+
+        rand_range(12, 60, val_a);
+        rand_range(1, 30, val_b);
+        if (val_b >= val_a) begin
+            swap_tmp = val_a;
+            val_a = val_b + 1;
+            val_b = swap_tmp;
+        end
+
+        rand_range(1, 4, shamt_v);
+        rand_range(1, 255, ori_imm_v);
+        rand_range(80, 220, mem_v);
+        add_sum = val_a + val_b;
+        if (mem_v == add_sum) begin
+            mem_v = mem_v + 1;
+        end
+
+        rand_range(1, 15, val_x14);
+        rand_range(16, 95, val_x15);
+        rand_range(96, 191, val_x16);
+        rand_range(64, 127, val_x18);
+        rand_range(128, 255, val_x21);
+        rand_range(1, 255, val_x22);
+        rand_range(1, 255, val_x23);
+        rand_range(1, 255, val_x24);
+        rand_range(1, 255, val_x25);
+        rand_range(1, 255, val_x26);
+
+        put_inst(0,  enc_i(7'h13, r_a[4:0],    3'b000, 5'd0,       val_a));
+        put_inst(1,  enc_i(7'h13, r_b[4:0],    3'b000, 5'd0,       val_b));
+        put_inst(2,  enc_r(7'h33, r_add[4:0],  3'b000, r_a[4:0],   r_b[4:0], 7'h00));
+        put_inst(3,  enc_r(7'h33, r_sub[4:0],  3'b000, r_a[4:0],   r_b[4:0], 7'h20));
+        put_inst(4,  enc_r(7'h33, r_and[4:0],  3'b111, r_a[4:0],   r_b[4:0], 7'h00));
+        put_inst(5,  enc_r(7'h33, r_or[4:0],   3'b110, r_a[4:0],   r_b[4:0], 7'h00));
+        put_inst(6,  enc_i(7'h13, r_shamt[4:0],3'b000, 5'd0,       shamt_v));
+        put_inst(7,  enc_r(7'h33, r_sll[4:0],  3'b001, r_b[4:0],   r_shamt[4:0], 7'h00));
+        put_inst(8,  enc_r(7'h33, r_srl[4:0],  3'b101, r_a[4:0],   r_shamt[4:0], 7'h00));
+        put_inst(9,  enc_i(7'h13, r_ori[4:0],  3'b110, r_b[4:0],   ori_imm_v));
+        put_inst(10, enc_i(7'h13, 5'd11,       3'b000, 5'd0,       mem_v));
+        put_inst(11, enc_u(7'h37, 5'd12,       20'h10000));
+        put_inst(12, enc_s(7'h23, 3'b010,      5'd12,  5'd11,      0));
+        put_inst(13, enc_i(7'h03, 5'd13,       3'b010, 5'd12,      0));
+        put_inst(14, enc_i(7'h13, 5'd14,       3'b000, 5'd0,       val_x14));
+        put_inst(15, enc_b(7'h63, 3'b000,      5'd13,  5'd11,      8));
+        put_inst(16, enc_i(7'h13, 5'd14,       3'b000, 5'd0,       8'h55));
+        put_inst(17, enc_i(7'h13, 5'd15,       3'b000, 5'd0,       val_x15));
+        put_inst(18, enc_b(7'h63, 3'b001,      5'd13,  r_add[4:0], 8));
+        put_inst(19, enc_i(7'h13, 5'd16,       3'b000, 5'd0,       8'h66));
+        put_inst(20, enc_i(7'h13, 5'd16,       3'b000, 5'd0,       val_x16));
+        put_inst(21, enc_j(7'h6f, 5'd17,       8));
+        put_inst(22, enc_i(7'h13, 5'd18,       3'b000, 5'd0,       8'h11));
+        put_inst(23, enc_i(7'h13, 5'd18,       3'b000, 5'd0,       val_x18));
+        put_inst(24, enc_i(7'h13, 5'd19,       3'b000, 5'd0,       8'h70));
+        put_inst(25, enc_i(7'h67, 5'd20,       3'b000, 5'd19,      0));
+        put_inst(26, enc_i(7'h13, 5'd21,       3'b000, 5'd0,       8'h33));
+        put_inst(27, enc_j(7'h6f, 5'd0,        8));
+        put_inst(28, enc_i(7'h13, 5'd21,       3'b000, 5'd0,       val_x21));
+        put_inst(29, enc_i(7'h13, 5'd22,       3'b000, 5'd0,       val_x22));
+        put_inst(30, enc_i(7'h13, 5'd23,       3'b000, 5'd0,       val_x23));
+        put_inst(31, enc_i(7'h13, 5'd24,       3'b000, 5'd0,       val_x24));
+        put_inst(32, enc_i(7'h13, 5'd25,       3'b000, 5'd0,       val_x25));
+        put_inst(33, enc_i(7'h13, 5'd26,       3'b000, 5'd0,       val_x26));
+        put_inst(34, enc_i(7'h13, 5'd27,       3'b000, 5'd12,      12'h400));
+        put_inst(35, enc_i(7'h13, 5'd28,       3'b000, 5'd27,      12'h400));
+        put_inst(36, enc_i(7'h13, 5'd29,       3'b000, 5'd28,      12'h400));
+        put_inst(37, enc_i(7'h13, 5'd30,       3'b000, 5'd29,      12'h400));
+        put_inst(38, enc_s(7'h23, 3'b010,      5'd12,  5'd22,      0));
+        put_inst(39, enc_s(7'h23, 3'b010,      5'd12,  5'd22,      0));
+        put_inst(40, enc_s(7'h23, 3'b010,      5'd27,  5'd23,      0));
+        put_inst(41, enc_s(7'h23, 3'b010,      5'd27,  5'd23,      0));
+        put_inst(42, enc_s(7'h23, 3'b010,      5'd28,  5'd24,      0));
+        put_inst(43, enc_s(7'h23, 3'b010,      5'd28,  5'd24,      0));
+        put_inst(44, enc_s(7'h23, 3'b010,      5'd29,  5'd25,      0));
+        put_inst(45, enc_s(7'h23, 3'b010,      5'd29,  5'd25,      0));
+        put_inst(46, enc_s(7'h23, 3'b010,      5'd30,  5'd26,      0));
+        put_inst(47, enc_s(7'h23, 3'b010,      5'd30,  5'd26,      0));
+        put_inst(48, enc_i(7'h13, 5'd31,       3'b000, 5'd0,       8'hff));
+        put_inst(49, enc_j(7'h6f, 5'd0,        0));
+
+        expect_reg(0, 32'h00000000);
+        expect_reg(r_a, val_a);
+        expect_reg(r_b, val_b);
+        expect_reg(r_add, add_sum);
+        expect_reg(r_sub, val_a - val_b);
+        expect_reg(r_and, val_a & val_b);
+        expect_reg(r_or,  val_a | val_b);
+        expect_reg(r_shamt, shamt_v);
+        expect_reg(r_sll, val_b << shamt_v);
+        expect_reg(r_srl, val_a >> shamt_v);
+        expect_reg(r_ori, val_b | ori_imm_v);
+
+        expect_reg(11, mem_v);
+        expect_reg(12, 32'h10000000);
+        expect_reg(13, mem_v);
+        expect_reg(14, val_x14);
+        expect_reg(15, val_x15);
+        expect_reg(16, val_x16);
+        expect_reg(17, 32'h00000058);
+        expect_reg(18, val_x18);
+        expect_reg(19, 32'h00000070);
+        expect_reg(20, 32'h00000068);
+        expect_reg(21, val_x21);
+        expect_reg(22, val_x22);
+        expect_reg(23, val_x23);
+        expect_reg(24, val_x24);
+        expect_reg(25, val_x25);
+        expect_reg(26, val_x26);
+        expect_reg(27, 32'h10000400);
+        expect_reg(28, 32'h10000800);
+        expect_reg(29, 32'h10000c00);
+        expect_reg(30, 32'h10001000);
+        expect_reg(31, 32'h000000ff);
+
+        $display("\n[ROUND %0d] Generated program", round_idx);
+        $display("  regs: ra=x%0d rb=x%0d add=x%0d sub=x%0d and=x%0d or=x%0d",
+                 r_a, r_b, r_add, r_sub, r_and, r_or);
+        $display("  regs: shamt=x%0d sll=x%0d srl=x%0d ori=x%0d",
+                 r_shamt, r_sll, r_srl, r_ori);
+        $display("  vals: a=%0d b=%0d shamt=%0d ori_imm=%0d mem=%0d",
+                 val_a, val_b, shamt_v, ori_imm_v, mem_v);
+    end
+    endtask
+
+    task check_round_result;
+        integer idx;
+        reg [31:0] actual_val;
+    begin
+        round_failed = 1'b0;
+        if (!saw_external_write || bus_write_cycles <= 0) begin
+            round_failed = 1'b1;
+            $display("[ROUND %0d] FAIL: no external write-back observed (saw=%0d, cycles=%0d)",
+                     round_idx, saw_external_write, bus_write_cycles);
+        end
+
+        for (idx = 0; idx < 32; idx = idx + 1) begin
+            if (expected_valid[idx]) begin
+                actual_val = soc.cpu.cpu_pipeline.registers.reg_file[idx];
+                if (actual_val !== expected_reg[idx]) begin
+                    round_failed = 1'b1;
+                    $display("[ROUND %0d] FAIL: x%0d actual=0x%h expected=0x%h",
+                             round_idx, idx, actual_val, expected_reg[idx]);
+                end
+            end
+        end
+    end
+    endtask
 
     // Flash read logic
     always @(*) begin
         if (digital_flash_read_en && digital_flash_addr < 4096) begin
             digital_flash_data = flash_mem[digital_flash_addr];
             digital_flash_ready = 1'b1;
-        end
-        else begin
+        end else begin
             digital_flash_data = 8'h00;
             digital_flash_ready = 1'b0;
         end
     end
+
     // RAM model
-    reg [31:0] ram_mem [0:1023];
-
-    initial begin
-        for (i = 0; i < 1024; i = i + 1) begin
-            ram_mem[i] = 32'h0;
-        end
-    end
-
-    // RAM闂佽崵濮村ú鈺咁敋瑜斿畷顖炲箻缂佹鍔甸梺鍝勫缁绘帞鏁?
     always @(posedge clk) begin
         if (rst_n) begin
             if (digital_mem_write_en) begin
@@ -213,8 +464,10 @@ module soc_peripheral_bus_tb;
                     4'b1111: ram_mem[digital_mem_addr[11:2]] <= digital_mem_wdata;
                     default: ram_mem[digital_mem_addr[11:2]] <= digital_mem_wdata;
                 endcase
-                $display("Time=%0t: RAM WRITE - addr=0x%h, data=0x%h, size=%b",
-                         $time, digital_mem_addr, digital_mem_wdata, digital_mem_byte_size);
+                if (VERBOSE_TRACE) begin
+                    $display("Time=%0t: RAM WRITE - addr=0x%h, data=0x%h, size=%b",
+                             $time, digital_mem_addr, digital_mem_wdata, digital_mem_byte_size);
+                end
             end
         end
     end
@@ -223,22 +476,14 @@ module soc_peripheral_bus_tb;
         if (digital_mem_read_en && digital_mem_addr[31:12] == 20'h10000) begin
             digital_mem_data = ram_mem[digital_mem_addr[11:2]];
             digital_mem_ready = 1'b1;
-        end
-        else begin
+        end else begin
             digital_mem_data = 32'h0;
             digital_mem_ready = 1'b1;
         end
     end
 
-    // GPIO simulation - keep all pins high-Z so SoC can drive outputs.
+    // Keep GPIO high-Z so the SoC can drive outputs.
     assign gpio_values = {`GPIO_NUMS{1'bz}};
-
-    // Placeholder GPIO monitor hook.
-    always @(posedge clk) begin
-        if (rst_n) begin
-            // no-op
-        end
-    end
 
     // Waveform dump
     initial begin
@@ -258,147 +503,94 @@ module soc_peripheral_bus_tb;
         forever #50 clk_timer = ~clk_timer;
     end
 
-    // Reset and test control
+    // Randomized multi-round stress control
     initial begin
+        seed = 32'h20260306;
+        round_pass_count = 0;
+        round_fail_count = 0;
+        round_failed = 1'b0;
         bus_write_cycles = 0;
         saw_external_write = 1'b0;
         rst_n = 0;
-        #20 rst_n = 1;
 
-        // Run long enough to finish and observe write-back traffic.
-        #15000;
+        clear_flash_mem();
+        clear_expected_regs();
+        for (i = 0; i < 1024; i = i + 1) begin
+            ram_mem[i] = 32'h0;
+        end
+
+        for (round_idx = 0; round_idx < NUM_ROUNDS; round_idx = round_idx + 1) begin
+            build_random_program();
+
+            for (i = 0; i < 1024; i = i + 1) begin
+                ram_mem[i] = 32'h0;
+            end
+            bus_write_cycles = 0;
+            saw_external_write = 1'b0;
+
+            rst_n = 0;
+            #20 rst_n = 1;
+            #ROUND_RUNTIME;
+
+            check_round_result();
+
+            if (round_failed) begin
+                round_fail_count = round_fail_count + 1;
+                $display("[ROUND %0d] RESULT: FAIL", round_idx);
+            end else begin
+                round_pass_count = round_pass_count + 1;
+                $display("[ROUND %0d] RESULT: PASS", round_idx);
+            end
+            $display("----------------------------------------");
+        end
 
         $display("\n========================================");
-        $display("ISA + Dirty-Line Write-Back Test Completed");
+        $display("Randomized ISA + Dirty-WriteBack Stress Summary");
         $display("========================================");
-        $display("External RAM write-back observation:");
-        $display("  saw_external_write = %0d (Expected: 1)", saw_external_write);
-        $display("  bus_write_cycles   = %0d (Expected: > 0)", bus_write_cycles);
-        $display("");
-        $display("Register values:");
-        $display("  x1  = 0x%h (Expected: 5)", dbg_x1);
-        $display("  x2  = 0x%h (Expected: 13)", dbg_x2);
-        $display("  x3  = 0x%h (Expected: 4)", dbg_x3);
-        $display("  x4  = 0x%h (Expected: 9)", dbg_x4);
-        $display("  x5  = 0x%h (Expected: 1)", dbg_x5);
-        $display("  x6  = 0x%h (Expected: 0)", dbg_x6);
-        $display("  x7  = 0x%h (Expected: 13)", dbg_x7);
-        $display("  x8  = 0x%h (Expected: 8)", dbg_x8);
-        $display("  x9  = 0x%h (Expected: 4)", dbg_x9);
-        $display("  x10 = 0x%h (Expected: 0x0000001c)", dbg_x10);
-        $display("  x11 = 0x%h (Expected: 0x00000096)", dbg_x11);
-        $display("  x12 = 0x%h (Expected: 0x10000000)", dbg_x12);
-        $display("  x13 = 0x%h (Expected: 0x00000096)", dbg_x13);
-        $display("  x14 = 0x%h (Expected: 0x00000002)", dbg_x14);
-        $display("  x15 = 0x%h (Expected: 0x0000005a)", dbg_x15);
-        $display("  x16 = 0x%h (Expected: 0x00000099)", dbg_x16);
-        $display("  x17 = 0x%h (Expected: 0x00000058)", dbg_x17);
-        $display("  x18 = 0x%h (Expected: 0x00000066)", dbg_x18);
-        $display("  x19 = 0x%h (Expected: 0x00000070)", dbg_x19);
-        $display("  x20 = 0x%h (Expected: 0x00000068)", dbg_x20);
-        $display("  x21 = 0x%h (Expected: 0x00000088)", dbg_x21);
-        $display("  x22 = 0x%h (Expected: 0x00000012)", dbg_x22);
-        $display("  x23 = 0x%h (Expected: 0x00000034)", dbg_x23);
-        $display("  x24 = 0x%h (Expected: 0x00000056)", dbg_x24);
-        $display("  x25 = 0x%h (Expected: 0x00000078)", dbg_x25);
-        $display("  x26 = 0x%h (Expected: 0x0000009a)", dbg_x26);
-        $display("  x27 = 0x%h (Expected: 0x10000400)", dbg_x27);
-        $display("  x28 = 0x%h (Expected: 0x10000800)", dbg_x28);
-        $display("  x29 = 0x%h (Expected: 0x10000c00)", dbg_x29);
-        $display("  x30 = 0x%h (Expected: 0x10001000)", dbg_x30);
-        $display("  x31 = 0x%h (Done flag, Expected: 0xFF)", dbg_x31);
-        $display("========================================\n");
-        $display("Full register dump:");
-        for (reg_idx = 0; reg_idx < 32; reg_idx = reg_idx + 1) begin
-            $display("  x%0d = 0x%h", reg_idx, soc.cpu.cpu_pipeline.registers.reg_file[reg_idx]);
-        end
-        $display("========================================\n");
-
-        // Verify ISA operations and write-back behavior.
-        if (saw_external_write &&
-            bus_write_cycles > 0 &&
-            dbg_x1  == 32'h00000005 &&
-            dbg_x2  == 32'h0000000d &&
-            dbg_x3  == 32'h00000004 &&
-            dbg_x4  == 32'h00000009 &&
-            dbg_x5  == 32'h00000001 &&
-            dbg_x6  == 32'h00000000 &&
-            dbg_x7  == 32'h0000000d &&
-            dbg_x8  == 32'h00000008 &&
-            dbg_x9  == 32'h00000004 &&
-            dbg_x10 == 32'h0000001c &&
-            dbg_x11 == 32'h00000096 &&
-            dbg_x12 == 32'h10000000 &&
-            dbg_x13 == 32'h00000096 &&
-            dbg_x14 == 32'h00000002 &&
-            dbg_x15 == 32'h0000005a &&
-            dbg_x16 == 32'h00000099 &&
-            dbg_x17 == 32'h00000058 &&
-            dbg_x18 == 32'h00000066 &&
-            dbg_x19 == 32'h00000070 &&
-            dbg_x20 == 32'h00000068 &&
-            dbg_x21 == 32'h00000088 &&
-            dbg_x22 == 32'h00000012 &&
-            dbg_x23 == 32'h00000034 &&
-            dbg_x24 == 32'h00000056 &&
-            dbg_x25 == 32'h00000078 &&
-            dbg_x26 == 32'h0000009a &&
-            dbg_x27 == 32'h10000400 &&
-            dbg_x28 == 32'h10000800 &&
-            dbg_x29 == 32'h10000c00 &&
-            dbg_x30 == 32'h10001000 &&
-            dbg_x31 == 32'h000000ff) begin
-            $display("PASS: ISA + dirty-line write-back test passed!");
+        $display("Total rounds : %0d", NUM_ROUNDS);
+        $display("Pass rounds  : %0d", round_pass_count);
+        $display("Fail rounds  : %0d", round_fail_count);
+        if (round_fail_count == 0) begin
+            $display("PASS: randomized stress test passed!");
         end else begin
-            $display("FAIL: ISA + dirty-line write-back test failed!");
+            $display("FAIL: randomized stress test failed!");
         end
-
+        $display("========================================\n");
         $finish;
     end
 
-    // Monitor bus activity
+    // Bus activity monitor
     always @(posedge clk) begin
         if (rst_n) begin
-            if (soc.io_write) begin
-                $display("Time=%0t: CPU WRITE REQUEST - addr=0x%h, data=0x%h, ready=%b",
-                         $time, soc.io_addr, soc.io_wdata, soc.io_ready);
-            end
-            if (soc.io_read) begin
-                $display("Time=%0t: CPU READ REQUEST - addr=0x%h, ready=%b",
-                         $time, soc.io_addr, soc.io_ready);
-            end
-            if (soc.cpu.cpu_pipeline.wb_rd_en) begin
-                $display("Time=%0t: WB COMMIT - rd=x%0d, data=0x%h",
-                         $time,
-                         soc.cpu.cpu_pipeline.wb_rd,
-                         soc.cpu.cpu_pipeline.wb_rd_data);
-            end
-
-            if (digital_mem_read_en) begin
-                $display("Time=%0t: BUS READ - addr=0x%h", $time, digital_mem_addr);
-            end
             if (digital_mem_write_en) begin
                 bus_write_cycles = bus_write_cycles + 1;
                 saw_external_write = 1'b1;
-                $display("Time=%0t: BUS WRITE - addr=0x%h, data=0x%h", $time, digital_mem_addr, digital_mem_wdata);
-            end
-            if (digital_flash_read_en) begin
-                $display("Time=%0t: FLASH READ - addr=0x%h, data=0x%h",
-                         $time, digital_flash_addr, digital_flash_data);
             end
 
-            // Monitor store execution path details.
-            if (soc.cpu.cpu_pipeline.ex_mem.inst_sw && soc.cpu.cpu_pipeline.ex_mem.state == 2'b00) begin
-                $display("Time=%0t: SW INSTRUCTION - rs1_data=0x%h, rs2_data=0x%h, rd=0x%h, imm_2031=0x%h, calculated_addr=0x%h",
-                         $time,
-                         soc.cpu.cpu_pipeline.ex_mem.rs1_data,
-                         soc.cpu.cpu_pipeline.ex_mem.rs2_data,
-                         soc.cpu.cpu_pipeline.ex_mem.rd,
-                         soc.cpu.cpu_pipeline.ex_mem.imm_2031,
-                         soc.cpu.cpu_pipeline.ex_mem.rs1_data + {{20{soc.cpu.cpu_pipeline.ex_mem.imm_2031[11]}},soc.cpu.cpu_pipeline.ex_mem.imm_2031[11:5],soc.cpu.cpu_pipeline.ex_mem.rd});
-                $display("         x10=0x%h, x11=0x%h",
-                         dbg_x10,
-                         dbg_x11);
+            if (VERBOSE_TRACE) begin
+                if (soc.io_write) begin
+                    $display("Time=%0t: CPU WRITE REQUEST - addr=0x%h, data=0x%h, ready=%b",
+                             $time, soc.io_addr, soc.io_wdata, soc.io_ready);
+                end
+                if (soc.io_read) begin
+                    $display("Time=%0t: CPU READ REQUEST - addr=0x%h, ready=%b",
+                             $time, soc.io_addr, soc.io_ready);
+                end
+                if (soc.cpu.cpu_pipeline.wb_rd_en) begin
+                    $display("Time=%0t: WB COMMIT - rd=x%0d, data=0x%h",
+                             $time, soc.cpu.cpu_pipeline.wb_rd, soc.cpu.cpu_pipeline.wb_rd_data);
+                end
+                if (digital_mem_read_en) begin
+                    $display("Time=%0t: BUS READ - addr=0x%h", $time, digital_mem_addr);
+                end
+                if (digital_mem_write_en) begin
+                    $display("Time=%0t: BUS WRITE - addr=0x%h, data=0x%h",
+                             $time, digital_mem_addr, digital_mem_wdata);
+                end
+                if (digital_flash_read_en) begin
+                    $display("Time=%0t: FLASH READ - addr=0x%h, data=0x%h",
+                             $time, digital_flash_addr, digital_flash_data);
+                end
             end
         end
     end
