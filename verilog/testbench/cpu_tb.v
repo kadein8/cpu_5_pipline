@@ -1,0 +1,115 @@
+/*                                                                      
+    Designer   : Renyangang               
+                                                                            
+    Licensed under the Apache License, Version 2.0 (the "License");         
+    you may not use this file except in compliance with the License.        
+    You may obtain a copy of the License at                                 
+                                                                            
+        http://www.apache.org/licenses/LICENSE-2.0                          
+                                                                            
+    Unless required by applicable law or agreed to in writing, software    
+    distributed under the License is distributed on an "AS IS" BASIS,       
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and     
+    limitations under the License. 
+*/
+`timescale 1ns/1ns
+`include "config.v"
+
+module cpu_tb;
+    reg clk;
+    reg rst_n;
+    reg clk_timer;
+
+    // 片外内存
+    reg [`MAX_BIT_POS:0] offchip_mem_data;
+    reg offchip_mem_ready;
+    wire [`MAX_BIT_POS:0] offchip_mem_wdata;
+    wire offchip_mem_write_en;
+    wire offchip_mem_read_en;
+    wire [`MAX_BIT_POS:0] offchip_mem_addr;
+    wire burst;
+    wire [2:0] burst_size;
+    wire read_ready;
+    wire [1:0] io_byte_size;
+
+    cpu_top cpu_top(
+        .clk(clk),
+        .rst_n(rst_n),
+        .clk_timer(clk_timer),
+        .io_addr(offchip_mem_addr),
+        .io_read(offchip_mem_read_en),
+        .io_write(offchip_mem_write_en),
+        .burst(burst),
+        .burst_size(burst_size),
+        .read_ready(read_ready),
+        .io_wdata(offchip_mem_wdata),
+        .io_byte_size(io_byte_size),
+        .io_rdata(offchip_mem_data),
+        .io_ready(offchip_mem_ready),
+        .peripheral_int_code(8'b0)
+    );
+
+    reg [7:0] memory [0:255];  // 假设要加载 256 个字节的内容
+    integer i;
+
+    initial begin
+        // 读取 hex 文件
+        $readmemh("test.hex", memory);
+
+        // // 打印每个字节以确保数据正确加载
+        // for (i = 0; i < 256; i = i + 1) begin
+        //     $display("memory[%0d] = %02x", i, memory[i]);
+        // end
+    end
+
+    reg [`MAX_BIT_POS:0] last_addr;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            offchip_mem_ready <= 1'b0;
+            last_addr <= 32'hFFFFFFFF;
+        end
+        else begin
+            last_addr <= offchip_mem_addr;
+
+            if (offchip_mem_read_en) begin
+                // 地址变化时产生新的 ready 脉冲
+                if (offchip_mem_addr != last_addr) begin
+                    offchip_mem_data <= {memory[offchip_mem_addr+3], memory[offchip_mem_addr+2],
+                                        memory[offchip_mem_addr+1], memory[offchip_mem_addr]};
+                    offchip_mem_ready <= 1'b1;
+                end
+                else begin
+                    offchip_mem_ready <= 1'b0;
+                end
+            end
+            else begin
+                offchip_mem_ready <= 1'b0;
+            end
+        end
+    end
+
+    initial begin
+        // $dumpfile("cpu_pipeline.vcd");
+        // $dumpvars; // dump all vars
+        $fsdbDumpfile("/tmp/cpu_v_build_kid/novas.fsdb");
+        $fsdbDumpvars(0, cpu_tb);
+    end
+
+    initial begin
+        clk = 0;
+        rst_n = 0;
+        clk_timer = 0;
+        offchip_mem_ready = 0;
+        #10 rst_n = 1;
+        
+        #500;
+        $finish;
+    end
+
+    always #5 clk = ~clk;
+    always #100 clk_timer = ~clk_timer;
+
+
+endmodule

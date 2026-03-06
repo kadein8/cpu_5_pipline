@@ -1,0 +1,210 @@
+Magic 271485
+Revision Verdi_O-2018.09-SP2
+
+; Window Layout <x> <y> <width> <height> <signalwidth> <valuewidth>
+viewPort 0 27 966 313 136 25
+
+; File list:
+; openDirFile [-d delimiter] [-s time_offset] [-rf auto_bus_rule_file] path_name file_name
+openDirFile -d / "" "/tmp/cpu_v_build_kid/soc_peripheral_bus.fsdb"
+
+; file time scale:
+; fileTimeScale ### s|ms|us|ns|ps
+
+; signal spacing:
+signalSpacing 5
+
+; windowTimeUnit is used for zoom, cursor & marker
+; waveform viewport range
+zoom 4890440.234722 5047002.734722
+cursor 1853083.49425613601
+marker 0.000000
+
+; user define markers
+; userMarker time_pos marker_name color linestyle
+; visible top row signal index
+top 76
+; marker line index
+markerPos 80
+
+; event list
+; addEvent event_name event_expression
+; curEvent event_name
+
+
+
+COMPLEX_EVENT_BEGIN
+
+
+COMPLEX_EVENT_END
+
+
+
+; toolbar current search type
+; curSTATUS search_type
+curSTATUS ByChange
+
+
+addGroup "G1"
+activeDirFile "" "/tmp/cpu_v_build_kid/soc_peripheral_bus.fsdb"
+addSignal -h 15 /soc_peripheral_bus_tb/clk
+addSignal -h 15 -holdScope clk_timer
+addSignal -h 15 -holdScope rst_n
+addGroup "G2"
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/inst_fetch/cur_inst_addr[31:0]
+addSignal -h 15 -holdScope next_inst_addr[31:0]
+addSignal -h 15 -holdScope inst_mem_read_en
+addSignal -h 15 -holdScope inst_mem_ready
+addSignal -h 15 -holdScope inst_code[31:0]
+addSignal -h 15 -holdScope inst_ready
+addSignal -h 15 -holdScope fetch_stop
+addSignal -h 15 -holdScope control_hazard
+addSignal -h 15 /soc_peripheral_bus_tb/digital_flash_addr[31:0]
+addSignal -h 15 -holdScope digital_flash_data[7:0]
+addSignal -h 15 -holdScope digital_flash_ready
+addGroup "G3"
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/inst_fetch/inst_ready
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/rd[4:0]
+addSignal -h 15 -holdScope rs1[4:0]
+addSignal -h 15 -holdScope rs2[4:0]
+addSignal -h 15 -holdScope imm_1231[19:0]
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/inst_decoder/inst_flags[47:0]
+addSignal -h 15 -holdScope invalid_instruction
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/if_id_control_hazard
+addSignal -h 15 -holdScope if_id_inst_code[31:0]
+addSignal -h 15 -holdScope if_id_pc_cur[31:0]
+addSignal -h 15 -holdScope if_id_pc_next[31:0]
+addGroup "G4"
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/id_ex_rd[4:0]
+addSignal -h 15 -holdScope id_ex_rs1_data[31:0]
+addSignal -h 15 -holdScope id_ex_rs2_data[31:0]
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/alu/out_en
+addSignal -h 15 -holdScope rd_data[31:0]
+addSignal -h 15 -holdScope rd_out[4:0]
+addGroup "G5"
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/wb_rd[4:0]
+addSignal -h 15 -holdScope wb_rd_data[31:0]
+addSignal -h 15 -holdScope wb_rd_en
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/registers/reg_file[31:0]
+addGroup "G6"
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/ex_mem/busy_flag
+addSignal -h 15 -holdScope byte_size[1:0]
+addSignal -h 15 -holdScope inst_sw
+addSignal -h 15 -holdScope mem_addr[31:0]
+addSignal -h 15 -holdScope mem_data[31:0]
+addSignal -h 15 -holdScope mem_write_en
+addSignal -h 15 -holdScope state[1:0]
+addSignal -h 15 /soc_peripheral_bus_tb/soc/digital_mem_addr[31:0]
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/registers/rd_data[31:0]
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/wb_rd_wait
+addSignal -h 15 /soc_peripheral_bus_tb/soc/digital_mem_wdata[31:0]
+addSignal -h 15 -holdScope digital_mem_write_en
+addGroup "G7"
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/inst_fetch/fetch_stop
+addSignal -h 15 -holdScope control_hazard
+addSignal -h 15 /soc_peripheral_bus_tb/digital_flash_data[7:0]
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/ex_branch/b_n_jmp
+addSignal -h 15 -holdScope jmp_en
+addSignal -h 15 -holdScope pc_next_out[31:0]
+addSignal -h 15 -holdScope rs1_data[31:0]
+addSignal -h 15 -holdScope rs2_data[31:0]
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/jmp_en
+addSignal -h 15 -holdScope jmp_pc[31:0]
+addSignal -h 15 -holdScope pipe_flush
+addGroup "G8"
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/inst_decoder/inst_bne
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/jmp_en
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/ex_branch/pc_next_out[31:0]
+addGroup "G9"
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/inst_fetch/fetch_stop
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/ex_branch/pc_next_out[31:0]
+addSignal -h 15 -holdScope rd_data_out[31:0]
+addSignal -h 15 -holdScope rd_out[4:0]
+addSignal -h 15 -holdScope rd_out_en
+addGroup "G10"
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/ex_branch/inst_jalr
+addSignal -h 15 -holdScope jmp_en
+addSignal -h 15 -holdScope pc_next_out[31:0]
+addSignal -h 15 -holdScope rd_data_out[31:0]
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/ex_mem/mem_read_en
+addSignal -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/ex_branch/rd_out[4:0]
+addSignal -h 15 -holdScope rs1_data[31:0]
+addGroup "G11"
+addSignal -expanded -h 15 /soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/registers/reg_file[31:0]
+addSignal -h 15 -holdScope reg_file[31][31:0]
+addSignal -h 15 -holdScope reg_file[30][31:0]
+addSignal -h 15 -holdScope reg_file[29][31:0]
+addSignal -h 15 -holdScope reg_file[28][31:0]
+addSignal -h 15 -holdScope reg_file[27][31:0]
+addSignal -h 15 -holdScope reg_file[26][31:0]
+addSignal -h 15 -holdScope reg_file[25][31:0]
+addSignal -h 15 -holdScope reg_file[24][31:0]
+addSignal -h 15 -holdScope reg_file[23][31:0]
+addSignal -h 15 -holdScope reg_file[22][31:0]
+addSignal -h 15 -holdScope reg_file[21][31:0]
+addSignal -h 15 -holdScope reg_file[20][31:0]
+addSignal -h 15 -holdScope reg_file[19][31:0]
+addSignal -h 15 -holdScope reg_file[18][31:0]
+addSignal -h 15 -holdScope reg_file[17][31:0]
+addSignal -h 15 -holdScope reg_file[16][31:0]
+addSignal -h 15 -holdScope reg_file[15][31:0]
+addSignal -h 15 -holdScope reg_file[14][31:0]
+addSignal -h 15 -holdScope reg_file[13][31:0]
+addSignal -h 15 -holdScope reg_file[12][31:0]
+addSignal -h 15 -holdScope reg_file[11][31:0]
+addSignal -h 15 -holdScope reg_file[10][31:0]
+addSignal -h 15 -holdScope reg_file[9][31:0]
+addSignal -h 15 -holdScope reg_file[8][31:0]
+addSignal -h 15 -holdScope reg_file[7][31:0]
+addSignal -h 15 -holdScope reg_file[6][31:0]
+addSignal -h 15 -holdScope reg_file[5][31:0]
+addSignal -h 15 -holdScope reg_file[4][31:0]
+addSignal -h 15 -holdScope reg_file[3][31:0]
+addSignal -h 15 -holdScope reg_file[2][31:0]
+addSignal -h 15 -holdScope reg_file[1][31:0]
+addSignal -h 15 -holdScope reg_file[0][31:0]
+addGroup "G12"
+
+; getSignalForm Scope Hierarchy Status
+; active file of getSignalForm
+activeDirFile "" "/tmp/cpu_v_build_kid/soc_peripheral_bus.fsdb"
+
+GETSIGNALFORM_SCOPE_HIERARCHY_BEGIN
+getSignalForm close
+
+"/soc_peripheral_bus_tb"
+"/soc_peripheral_bus_tb/soc"
+"/soc_peripheral_bus_tb/soc/cpu"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/alu"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/ex_branch"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/ex_csr"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/ex_mem"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/inst_decoder"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/inst_fetch"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/registers"
+"/soc_peripheral_bus_tb/soc/peripherals_bus"
+
+SCOPE_LIST_BEGIN
+"/soc_peripheral_bus_tb"
+"/soc_peripheral_bus_tb/soc"
+"/soc_peripheral_bus_tb/soc/cpu"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/inst_fetch"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/inst_decoder"
+"/soc_peripheral_bus_tb/soc/cpu/sys_bus"
+"/soc_peripheral_bus_tb/soc/peripherals_bus"
+"/soc_peripheral_bus_tb/soc/peripherals_bus/dut"
+"/soc_peripheral_bus_tb/soc/peripherals_bus/flash"
+"/soc_peripheral_bus_tb/soc/peripherals_bus/gpio_controller_inst"
+"/soc_peripheral_bus_tb/soc/peripherals_bus/ram"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/alu"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/ex_branch"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/ex_csr"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/ex_mem"
+"/soc_peripheral_bus_tb/soc/cpu/cpu_pipeline/registers"
+SCOPE_LIST_END
+
+GETSIGNALFORM_SCOPE_HIERARCHY_END
+
+

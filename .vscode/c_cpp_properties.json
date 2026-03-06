@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "name": "Win64",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "d:/soft/msys64/mingw64/include/**",
+                "d:/soft/verilator/include/**",
+                "${workspaceFolder}/digital_soc/src/bsp/**",
+                "${workspaceFolder}/digital_soc/verilog/obj_dir/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.18362.0",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "D:/soft/msys64/mingw64/bin/gcc.exe"
+        }
+    ],
+    "version": 4
+}

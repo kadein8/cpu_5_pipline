@@ -1,0 +1,33 @@
+0xC0000000 -> uart DMA base (upward growth)
+0x80000000 -> rom boot base
+0x40000000 -> ssd load base
+0x02000000 -> kernel memory base
+0x01100000 -> kernel heap base (upward growth)
+0x01000000 -> kernel stack base (downward growth)
+
+
+0xB0000000 -> mtimecmp low 32bits
+0xB0000004 -> mtimecmp high 32bits
+0xB0000008 -> mtime low 32bits      read only
+0xB000000C -> mtime high 32bits     read only
+0xB0001000 -> peripheral interrupts code (read only)
+
+0xA0000000 -> GPIO setbits  32bits (low 10bits are used, 1 output 0 input)
+0xA0000004 -> GPIO bits 32bits (low 10bits are used)
+0xA0000008 -> GPIO interrupts clear 32bits (set to 0x0)
+
+0xA0000100 -> uart config address (reserved)
+0xA0000104 -> uart write data buffer address
+0xA0000108 -> set uart current read end address
+0xA000010C -> get uart current read buffer end address (read only)
+0xA0000110 -> get uart current status bit 0 writeable other bits reserved (read only) 
+
+0xA0000200 -> IIC opration config address 
+              (bits[1-7]: dev address, bit[0]: read/write)
+              (bits[8-15]: reg address valid in write mode)
+              (bits[16-23]: data only support 1 byte valid in write mode)
+              (bits[24-31]: reserved)
+0xA0000204 -> IIC read buffer address
+              (bits[1-7]: reserved, bit[0]: opration status 0 doing 1 complate)
+              (bits[8-15]: data only support 1 byte valid in read mode)
+              (bits[16-31]: reserved)
