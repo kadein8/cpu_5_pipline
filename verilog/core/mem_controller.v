@@ -14,7 +14,7 @@
  limitations under the License.    
 
  Description: mem controller
-    内存访问控制，包括调用缓存、外部内存、外设内存映射等
+    Memory access controller for cache/off-chip memory/peripheral mapped access.
  */
  `include "config.v"
 
@@ -22,23 +22,23 @@
 module mem_controller(
     input clk,
     input rst_n,
-    // 指令获取通道
+    // Instruction request channel
     input [`MAX_BIT_POS:0] inst_mem_addr,
     input inst_read_en,
-     // 指令返回通道
+     // Instruction response channel
     output wire [`MAX_BIT_POS:0] inst_mem_rdata,
     output wire inst_mem_ready,
-    // 数据获取通道
+    // Data request channel
     input [`MAX_BIT_POS:0] mem_addr,
     input read_en,
     input write_en,
     input wire [1:0]byte_size, // 0: 32bit, 1: 8bit, 2: 16bit
     input [`MAX_BIT_POS:0] mem_wdata,
-    // 数据返回通道
+    // Data response channel
     output wire [`MAX_BIT_POS:0] mem_rdata,
     output wire mem_ready,
 
-    // 片外内存获取通道
+    // Off-chip memory interface
     input [(`CACHE_LINE_SIZE*8)-1:0] offchip_mem_data,
     input offchip_mem_ready,
     output wire [(`CACHE_LINE_SIZE*8)-1:0] offchip_mem_wdata,
@@ -46,7 +46,7 @@ module mem_controller(
     output reg offchip_mem_read_en,
     output reg [`MAX_BIT_POS:0] offchip_mem_addr
 );
-    // 指令读取相关信号声明
+    // Instruction-cache side control signals
     reg inst_load_en;
     wire inst_save_data;
     wire inst_data_hit;
@@ -57,7 +57,7 @@ module mem_controller(
     /* verilator lint_off UNOPTFLAT */
     wire inst_cache_load_en;
 
-    // 数据读写相关信号声明
+    // Data-cache side control signals
     reg d_load_en;
     /* verilator lint_off UNOPTFLAT */
     wire d_save_data;
@@ -71,7 +71,7 @@ module mem_controller(
     wire d_write_cache_en;
     wire d_cache_load_en;
 
-    // 指令缓存
+    // Instruction cache
     cache i_cache(
         .clk(clk),
         .rst_n(rst_n),
@@ -91,7 +91,7 @@ module mem_controller(
         .write_back_data()
     );
 
-    // 数据缓存
+    // Data cache
     cache d_cache(
         .clk(clk),
         .rst_n(rst_n),
@@ -150,7 +150,7 @@ module mem_controller(
             case (offship_state)
                 OFF_STATUS_IDLE: begin
                     if (inst_cache_load_en && cur_load_type == CUR_LOAD_IDLE) begin
-                        offchip_mem_addr <= {inst_mem_addr[31:4],4'b0000}; // 指令保证4字节对齐访问
+                        offchip_mem_addr <= {inst_mem_addr[31:4],4'b0000}; // Instruction fetch is 4-byte aligned.
                         offchip_mem_read_en <= 1'b1;
                         cur_load_type <= CUR_INST_LOAD;
                     end
@@ -163,8 +163,10 @@ module mem_controller(
                     d_load_en <= 1'b0;
                     d_save_ready <= 1'b0;
                 end
-                OFF_STATUS_RW: begin // 等待片外读取完毕
+                OFF_STATUS_RW: begin // Wait for off-chip read completion
                     if (offchip_mem_ready) begin
+                        // Off-chip line fetch has finished. Drop read request first.
+                        offchip_mem_read_en <= 1'b0;
                         if (cur_load_type == CUR_INST_LOAD) begin
                             inst_load_en <= 1'b1;
                         end
@@ -173,7 +175,7 @@ module mem_controller(
                         end
                     end
                 end
-                OFF_STATUS_WRITECACHE: begin // 写入缓存
+                OFF_STATUS_WRITECACHE: begin // Write fetched line into cache
                     if (inst_load_complate && cur_load_type == CUR_INST_LOAD) begin
                         inst_load_en <= 1'b0;
                         offchip_mem_read_en <= 1'b0;
@@ -189,11 +191,18 @@ module mem_controller(
                         end
                     end
                     else if (d_save_data && !d_save_ready && cur_load_type == CUR_DATA_LOAD) begin
-                        // 待覆盖缓存行存在脏数据，需要先写回到外部
-                        offchip_mem_write_en <= 1'b1;
+                        // Dirty victim line exists: clear read first, then issue write-back.
+                        if (offchip_mem_read_en) begin
+                            offchip_mem_read_en <= 1'b0;
+                            offchip_mem_write_en <= 1'b0;
+                        end
+                        else begin
+                            offchip_mem_addr <= {mem_addr[31:4],4'b0000};
+                            offchip_mem_write_en <= 1'b1;
+                        end
                     end
                 end
-                OFF_STATUS_WRITEBACK: begin // 写回外部
+                OFF_STATUS_WRITEBACK: begin // Write back dirty line to off-chip
                     if (offchip_mem_ready) begin
                         offchip_mem_write_en <= 1'b0;
                         d_save_ready <= 1'b1;
@@ -229,7 +238,7 @@ module mem_controller(
                         next_offship_state = OFF_STATUS_IDLE;
                     end
                 end
-                OFF_STATUS_RW: begin // 等待片外读取完毕
+                OFF_STATUS_RW: begin // Wait for off-chip read completion
                     if (inst_load_en || d_load_en) begin
                         next_offship_state = OFF_STATUS_WRITECACHE;
                     end
@@ -237,7 +246,7 @@ module mem_controller(
                         next_offship_state = OFF_STATUS_RW;
                     end
                 end
-                OFF_STATUS_WRITECACHE: begin // 写入缓存
+                OFF_STATUS_WRITECACHE: begin // Write fetched line into cache
                     if (!inst_load_en && !d_load_en) begin
                         next_offship_state = OFF_STATUS_WAITIDLE;
                         if (cur_load_type == CUR_LOAD_IDLE) begin
@@ -245,14 +254,14 @@ module mem_controller(
                         end
                     end
                     else if (offchip_mem_write_en) begin
-                        // 待覆盖缓存行存在脏数据，需要先写回到外部
+                        // Dirty victim line exists, enter write-back state.
                         next_offship_state = OFF_STATUS_WRITEBACK;
                     end
                     else begin
                         next_offship_state = OFF_STATUS_WRITECACHE;
                     end
                 end
-                OFF_STATUS_WRITEBACK: begin // 写回外部
+                OFF_STATUS_WRITEBACK: begin // Write back dirty line to off-chip
                     if (!offchip_mem_write_en) begin
                         next_offship_state = OFF_STATUS_WRITECACHE;
                     end

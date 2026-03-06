@@ -86,14 +86,14 @@ module cache_way (
                 cache_data[i] <= {`CACHE_LINE_WIDTH{1'b0}};
             end
         end
-        else if(cs) begin
-            if (load_enable) begin
+        else begin
+            if (load_enable && cs) begin
                 cache_data[index] <= write_load_data;
                 dirty[index] <= 0;
                 valid[index] <= 1;
                 tag[index] <= tag_in;
             end
-            else if (write_enable) begin
+            else if (write_enable && hit) begin
                 case (byte_size)
                     1: begin
                         cache_data[index][(offset*8) +: 8] <= wdata[7:0];     
@@ -142,10 +142,10 @@ module cache_set(
     reg [1:0]state;
     reg [1:0]next_state;
 
-    // 计算树的深度
+    // PLRU tree depth
     localparam DEPTH = $clog2(`CACHE_WAYS);
-    // 存储每个节点的方向位
-    // 总节点数为 CACHE_WAYS -1
+    // Direction bits for each internal node in the PLRU tree.
+    // Internal-node count is CACHE_WAYS - 1.
     reg [`CACHE_WAYS-2:0] plru_bits;
 
     localparam S_IDLE = 2'b00, S_ADDR = 2'b01, S_GETHIT = 2'b10, S_WRITELOAD = 2'b11;
@@ -177,7 +177,7 @@ module cache_set(
             way_cs[index] = way_hit;
             dirty = 1'b0;
             if(|way_hit) begin
-                // 常规读写命中时，更新
+                // Update PLRU state on normal read/write hit.
                 for (i = 0; i < `CACHE_WAYS; i = i + 1) begin
                     if (way_hit[i]) begin
                         bit_idx = 0;
@@ -236,7 +236,7 @@ module cache_set(
             case (state)
                 S_IDLE: begin
                     if (read_enable) begin
-                        // 读取状态下直接返回，不要等待状态
+                        // Read path can return status directly.
                         status_ready = 1'b1;
                         update_hitstatus();
                     end
@@ -338,49 +338,46 @@ module cache(
     always @(*) begin
         if (!rst_n) begin
             next_state = IDLE;
-            save_data = 0;
-            load_complate = 0;
-            begin_load = 0;
+            save_data = 1'b0;
+            load_complate = 1'b0;
+            begin_load = 1'b0;
         end
         else begin
+            // Default outputs to avoid latch/X propagation.
+            next_state = state;
+            save_data = 1'b0;
+            load_complate = 1'b0;
+            begin_load = 1'b0;
+
             case (state)
                 IDLE: begin
-                    begin_load = 1'b0;
-                    load_complate = 0;
                     if (status_ready && load_enable) begin
                         if (dirty) begin
-                            next_state = WAIT_WRITE_2_MEM; // 进入等待写入内存状态
+                            // Dirty victim line: request write-back first.
+                            next_state = WAIT_WRITE_2_MEM;
                             save_data = 1'b1;
-                            begin_load = 1'b0;
                         end
                         else begin
-                            next_state = WAIT_LOAD_SAVE; // 进入等待加载状态
-                            save_data = 1'b0;
+                            // Clean victim line: directly install fetched line.
+                            next_state = WAIT_LOAD_SAVE;
                             begin_load = 1'b1;
                         end
                     end
-                    else begin
-                        next_state = state;
-                    end
                 end
-                WAIT_WRITE_2_MEM: begin // 等待写入内存
+                WAIT_WRITE_2_MEM: begin
+                    // Keep write-back request high until controller acknowledges.
+                    save_data = 1'b1;
                     if (save_ready) begin
-                        next_state = WAIT_LOAD_SAVE; // 保存内存完毕，进入等待加载状态
-                        save_data = 1'b0;
+                        next_state = WAIT_LOAD_SAVE;
                         begin_load = 1'b1;
                     end
-                    else begin // 否则继续等待
-                        next_state = state;
-                    end
                 end
-                WAIT_LOAD_SAVE: begin // 等待加载
+                WAIT_LOAD_SAVE: begin
+                    // Keep line-load trigger high until cache_set finishes save.
+                    begin_load = 1'b1;
                     if (load_save_ready) begin
                         load_complate = 1'b1;
-                        begin_load = 1'b0;
-                        next_state = IDLE; // 保存cache到内存，返回空闲状态
-                    end
-                    else begin
-                        next_state = state;
+                        next_state = IDLE;
                     end
                 end
                 default: begin

@@ -11,7 +11,7 @@ peripherals/gpio_controller.v peripherals/hl_adapter.v peripherals/peripherals_b
 common/fifo_async.v soc/digital_soc.v soc/vboard_soc.v testbench/soc_peripheral_bus_tb.v \
 -o /tmp/cpu_v_build_kid/simv
                          Chronologic VCS (TM)
-       Version O-2018.09-SP2_Full64 -- Thu Mar  5 20:22:08 2026
+       Version O-2018.09-SP2_Full64 -- Fri Mar  6 18:11:20 2026
                Copyright (c) 1991-2018 by Synopsys Inc.
                          ALL RIGHTS RESERVED
 
@@ -25,7 +25,119 @@ Warning-[LCA_FEATURES_ENABLED] Usage warning
   information regarding list of LCA features please refer to Chapter "LCA 
   features" in the VCS/VCS-MX Release Notes
 
-The design hasn't changed and need not be recompiled. 
-If you really want to, delete file /tmp/cpu_v_build_kid/simv.daidir/.vcs.timestamp and
-run VCS again.
+Parsing design file 'core/config.v'
+Parsing design file 'core/registers.v'
+Parsing included file 'core/config.v'.
+Back to file 'core/registers.v'.
+Parsing design file 'core/registers_csr.v'
+Parsing included file 'core/config.v'.
+Back to file 'core/registers_csr.v'.
+Parsing design file 'core/inst_fetch.v'
+Parsing included file 'core/config.v'.
+Back to file 'core/inst_fetch.v'.
+Parsing design file 'core/inst_decoder.v'
+Parsing included file 'core/config.v'.
+Back to file 'core/inst_decoder.v'.
+Parsing design file 'core/ex_alu.v'
+Parsing included file 'core/config.v'.
+Back to file 'core/ex_alu.v'.
+Parsing design file 'core/ex_branch.v'
+Parsing included file 'core/config.v'.
+Back to file 'core/ex_branch.v'.
+Parsing design file 'core/ex_csr.v'
+Parsing included file 'core/config.v'.
+Back to file 'core/ex_csr.v'.
+Parsing design file 'core/ex_mem.v'
+Parsing included file 'core/config.v'.
+Back to file 'core/ex_mem.v'.
+Parsing design file 'core/mem_controller.v'
+Parsing included file 'core/config.v'.
+Back to file 'core/mem_controller.v'.
+Parsing design file 'core/cache.v'
+Parsing included file 'core/config.v'.
+Back to file 'core/cache.v'.
+Parsing design file 'core/sys_bus.v'
+Parsing included file 'core/config.v'.
+Back to file 'core/sys_bus.v'.
+Parsing design file 'core/cpu_pipeline.v'
+Parsing included file 'core/config.v'.
+Back to file 'core/cpu_pipeline.v'.
+Parsing design file 'core/cpu_top.v'
+Parsing included file 'core/config.v'.
+Back to file 'core/cpu_top.v'.
+Parsing design file 'peripherals/digital/digital_ram.v'
+Parsing included file 'core/config.v'.
+Back to file 'peripherals/digital/digital_ram.v'.
+Parsing design file 'peripherals/digital/digital_flash.v'
+Parsing included file 'core/config.v'.
+Back to file 'peripherals/digital/digital_flash.v'.
+Parsing design file 'peripherals/uart/uart_clk_div.v'
+Parsing design file 'peripherals/uart/uart_rx.v'
+Parsing design file 'peripherals/uart/uart_tx.v'
+Parsing design file 'peripherals/uart/uart_top.v'
+Parsing included file 'core/config.v'.
+Back to file 'peripherals/uart/uart_top.v'.
+Parsing design file 'peripherals/spi/spi_master.v'
+Parsing design file 'peripherals/iic/iic_scl.v'
+Parsing design file 'peripherals/iic/iic_master.v'
+Parsing design file 'peripherals/iic/iic_slave.v'
+Parsing design file 'peripherals/iic/iic_top.v'
+Parsing included file 'core/config.v'.
+Back to file 'peripherals/iic/iic_top.v'.
+Parsing design file 'peripherals/gpio_controller.v'
+Parsing included file 'core/config.v'.
+Back to file 'peripherals/gpio_controller.v'.
+Parsing design file 'peripherals/hl_adapter.v'
+Parsing included file 'core/config.v'.
+Back to file 'peripherals/hl_adapter.v'.
+Parsing design file 'peripherals/peripherals_bus.v'
+Parsing included file 'core/config.v'.
+Back to file 'peripherals/peripherals_bus.v'.
+Parsing design file 'common/fifo_async.v'
+Parsing design file 'soc/digital_soc.v'
+Parsing included file 'core/config.v'.
+Back to file 'soc/digital_soc.v'.
+Parsing design file 'soc/vboard_soc.v'
+Parsing included file 'core/config.v'.
+Back to file 'soc/vboard_soc.v'.
+Parsing design file 'testbench/soc_peripheral_bus_tb.v'
+Parsing included file 'core/config.v'.
+Back to file 'testbench/soc_peripheral_bus_tb.v'.
+Top Level Modules:
+       spi_master
+       iic_slave
+       iic_top
+       hl_adapter
+       vboard_soc
+       soc_peripheral_bus_tb
+TimeScale is 1 ns / 1 ps
 
+Warning-[TFIPC] Too few instance port connections
+soc/digital_soc.v, 73
+digital_soc, "peripherals_bus peripherals_bus( .pclk (clk),  .rst_n (rst_n),  .io_addr (io_addr),  .io_read (io_read),  .io_write (io_write),  .burst (burst),  .burst_size (burst_size),  .read_ready (read_ready),  .io_wdata (io_wdata),  .io_byte_size (io_byte_size),  .io_rdata (io_rdata),  .io_ready (io_ready),  .digital_flash_addr (digital_flash_addr),  .digital_flash_write_en (digital_flash_write_en),  .digital_flash_read_en (digital_flash_read_en),  .digital_flash_byte_size (digital_flash_byte_size),  .digital_flash_wdata (digital_flash_wdata),  .digital_flash_data (digital_flash_data),  .digital_flash_ready (digital_flash_ready),  .digital_mem_addr (digital_mem_addr),  .digital_mem_write_en (digital_mem_write_en),  .digital_mem_read_en (digital_mem_read_en),  .di ... "
+  The above instance has fewer port connections than the module definition.
+  Please use '+lint=TFIPC-L' to print out detailed information of unconnected 
+  ports.
+
+Notice: Ports coerced to inout, use -notice for details
+Starting vcs inline pass...
+16 modules and 0 UDP read.
+	However, due to incremental compilation, no re-compilation is necessary.
+make[1]: Entering directory `/tmp/cpu_v_build_kid/csrc'
+rm -f _csrc*.so pre_vcsobj_*.so share_vcsobj_*.so
+ld -shared  -Bsymbolic  -o .//../simv.daidir//_csrc0.so objs/amcQw_d.o 
+rm -f _csrc0.so
+if [ -x /tmp/cpu_v_build_kid/simv ]; then chmod -x /tmp/cpu_v_build_kid/simv; fi \
+
+g++  -o /tmp/cpu_v_build_kid/simv    -Wl,-rpath-link=./ -Wl,-rpath='$ORIGIN'/simv.daidir/ \
+-Wl,-rpath=./simv.daidir/ -Wl,-rpath='$ORIGIN'/simv.daidir//scsim.db.dir  -Wl,--no-as-needed \
+-rdynamic  -Wl,-rpath=/home/synopsys/vcs/O-2018.09-SP2/linux64/lib -L/home/synopsys/vcs/O-2018.09-SP2/linux64/lib \
+_90119_archive_1.so _prev_archive_1.so _csrc0.so  SIM_l.o  _csrc0.so     rmapats_mop.o \
+rmapats.o rmar.o rmar_nd.o  rmar_llvm_0_1.o rmar_llvm_0_0.o          -lzerosoft_rt_stubs \
+-lvirsim -lerrorinf -lsnpsmalloc -lvfs    -lvcsnew -lsimprofile -luclinative /home/synopsys/vcs/O-2018.09-SP2/linux64/lib/vcs_tls.o \
+-Wl,-whole-archive -lvcsucli -Wl,-no-whole-archive        _vcs_pli_stub_.o   /home/synopsys/vcs/O-2018.09-SP2/linux64/lib/vcs_save_restore_new.o \
+/home/synopsys/verdi/Verdi_O-2018.09-SP2/share/PLI/VCS/LINUX64/pli.a -ldl  -lc -lm \
+-lpthread -ldl 
+/tmp/cpu_v_build_kid/simv up to date
+make[1]: Leaving directory `/tmp/cpu_v_build_kid/csrc'
+CPU time: .941 seconds to compile + .328 seconds to elab + .266 seconds to link

@@ -190,7 +190,7 @@ Limit information:
 cputime		unlimited
 filesize		unlimited
 datasize		unlimited
-stacksize		8192 kbytes
+stacksize		unlimited
 coredumpsize		0 kbytes
 memoryuse		unlimited
 vmemoryuse		unlimited
@@ -249,7 +249,6 @@ USER=kid
 QTLIB=/usr/lib/qt-3.3/lib
 XDG_CURRENT_DESKTOP=GNOME-Classic:GNOME
 VCS_MX_HOME=/home/synopsys/vcs-mx/O-2018.09-SP2
-OLDPWD=/home/kid
 IMSETTINGS_MODULE=none
 MAKEFLAGS=
 MFLAGS=
@@ -257,7 +256,7 @@ MAIL=/var/spool/mail/kid
 PS1=\[\e[1;32m\][\u@\h `pwd`]\[\e[0m\] \[\e[1;32m\]➜\[\e[0m\] 
 DBUS_STARTER_BUS_TYPE=session
 SCL_HOME=/home/synopsys/scl/2018.06
-GNOME_TERMINAL_SCREEN=/org/gnome/Terminal/screen/5d3d8232_6f84_4891_8ed7_2b5b84007f7e
+GNOME_TERMINAL_SCREEN=/org/gnome/Terminal/screen/8efb7ae2_fac7_4939_a073_316f3ce0ce61
 NVM_DIR=/home/kid/.nvm
 GNOME_TERMINAL_SERVICE=:1.98
 HISTSIZE=1000
@@ -280,90 +279,90 @@ argv[0]=/tmp/cpu_v_build_kid/simv
 argv[1]=-l
 argv[2]=vlogs/sim_soc_bus.log
 argv[3]=+vcs+flush+all
-282 profile - 100
-          CPU/Mem usage: 0.080 sys,  0.340 user,  256.40M mem
-283 Thu Mar  5 19:38:43 2026
-284 pliAppInit
-285 FSDB_GATE is set.
-286 FSDB_RTL is set.
-287 Enable Parallel Dumping.
-288 pliAppMiscSet: New Sim Round
-289 pliEntryInit
-290 LIBSSCORE=found /home/synopsys/verdi/Verdi_O-2018.09-SP2/share/PLI/lib/LINUXAMD64/libsscore_vcs201809.so through $NOVAS_HOME setting.
-291 FSDB Dumper for VCS, Release Verdi_O-2018.09-SP2, Linux x86_64/64bit, 02/21/2019
-292 (C) 1996 - 2019 by Synopsys, Inc.
-293 sps_call_fsdbDumpfile_main at 0 : testbench/soc_peripheral_bus_tb.v(228)
-294 argv[0]: (/tmp/cpu_v_build_kid/soc_peripheral_bus.fsdb)
-295 *Verdi* FSDB WARNING: The FSDB file already exists. Overwriting the FSDB file may crash the programs that are using this file.
-296 *Verdi* : Create FSDB file '/tmp/cpu_v_build_kid/soc_peripheral_bus.fsdb'
-297 compile option from '/tmp/cpu_v_build_kid/simv.daidir/vcs_rebuild'.
-298   "vcs '-full64' '-timescale=1ns/1ps' '-debug_access+all' '-kdb' '-lca' '-LDFLAGS' '-Wl,--no-as-needed' '+v2k' '-Mdir=/tmp/cpu_v_build_kid/csrc' '+incdir+core' '+incdir+peripherals' '+incdir+common' '+incdir+soc' '-l' 'vlogs/compile.log' 'core/config.v' 'core/registers.v' 'core/registers_csr.v' 'core/inst_fetch.v' 'core/inst_decoder.v' 'core/ex_alu.v' 'core/ex_branch.v' 'core/ex_csr.v' 'core/ex_mem.v' 'core/mem_controller.v' 'core/cache.v' 'core/sys_bus.v' 'core/cpu_pipeline.v' 'core/cpu_top.v' 'peripherals/digital/digital_ram.v' 'peripherals/digital/digital_flash.v' 'peripherals/uart/uart_clk_div.v' 'peripherals/uart/uart_rx.v' 'peripherals/uart/uart_tx.v' 'peripherals/uart/uart_top.v' 'peripherals/spi/spi_master.v' 'peripherals/iic/iic_scl.v' 'peripherals/iic/iic_master.v' 'peripherals/iic/iic_slave.v' 'peripherals/iic/iic_top.v' 'peripherals/gpio_controller.v' 'peripherals/hl_adapter.v' 'peripherals/peripherals_bus.v' 'common/fifo_async.v' 'soc/digital_soc.v' 'soc/vboard_soc.v' 'testbench/soc_peripheral_bus_tb.v' '-o' '/tmp/cpu_v_build_kid/simv' 2>&1"
-299 FSDB_VCS_ENABLE_FAST_VC is enable
-300 sps_call_fsdbDumpvars_vd_main at 0 : testbench/soc_peripheral_bus_tb.v(229)
-301 argv[0]: (0)
-302 argv[1]: (handle) soc_peripheral_bus_tb
-303 [spi_vcs_vd_ppi_create_root]: no upf option
-304 FSDB dumper cannot dump UPF related power signal ($power_tree): no ppiPowerNetwork.
-305 *Verdi* : Begin traversing the scope (soc_peripheral_bus_tb), layer (0).
-306 *Verdi* : End of traversing.
-307 pliAppHDL_DumpVarComplete traverse var: profile - 
-          CPU/Mem usage: 0.130 sys,  0.380 user,  352.87M mem
-                   incr: 0.010 sys,  0.030 user,  8.48M mem
-                   accu: 0.010 sys,  0.030 user,  8.48M mem
-              accu incr: 0.010 sys,  0.030 user,  8.48M mem
+281 profile - 100
+          CPU/Mem usage: 0.070 sys,  0.280 user,  256.41M mem
+282 Fri Mar  6 18:11:23 2026
+283 pliAppInit
+284 FSDB_GATE is set.
+285 FSDB_RTL is set.
+286 Enable Parallel Dumping.
+287 pliAppMiscSet: New Sim Round
+288 pliEntryInit
+289 LIBSSCORE=found /home/synopsys/verdi/Verdi_O-2018.09-SP2/share/PLI/lib/LINUXAMD64/libsscore_vcs201809.so through $NOVAS_HOME setting.
+290 FSDB Dumper for VCS, Release Verdi_O-2018.09-SP2, Linux x86_64/64bit, 02/21/2019
+291 (C) 1996 - 2019 by Synopsys, Inc.
+292 sps_call_fsdbDumpfile_main at 0 : testbench/soc_peripheral_bus_tb.v(245)
+293 argv[0]: (/tmp/cpu_v_build_kid/soc_peripheral_bus.fsdb)
+294 *Verdi* FSDB WARNING: The FSDB file already exists. Overwriting the FSDB file may crash the programs that are using this file.
+295 *Verdi* : Create FSDB file '/tmp/cpu_v_build_kid/soc_peripheral_bus.fsdb'
+296 compile option from '/tmp/cpu_v_build_kid/simv.daidir/vcs_rebuild'.
+297   "vcs '-full64' '-timescale=1ns/1ps' '-debug_access+all' '-kdb' '-lca' '-LDFLAGS' '-Wl,--no-as-needed' '+v2k' '-Mdir=/tmp/cpu_v_build_kid/csrc' '+incdir+core' '+incdir+peripherals' '+incdir+common' '+incdir+soc' '-l' 'vlogs/compile.log' 'core/config.v' 'core/registers.v' 'core/registers_csr.v' 'core/inst_fetch.v' 'core/inst_decoder.v' 'core/ex_alu.v' 'core/ex_branch.v' 'core/ex_csr.v' 'core/ex_mem.v' 'core/mem_controller.v' 'core/cache.v' 'core/sys_bus.v' 'core/cpu_pipeline.v' 'core/cpu_top.v' 'peripherals/digital/digital_ram.v' 'peripherals/digital/digital_flash.v' 'peripherals/uart/uart_clk_div.v' 'peripherals/uart/uart_rx.v' 'peripherals/uart/uart_tx.v' 'peripherals/uart/uart_top.v' 'peripherals/spi/spi_master.v' 'peripherals/iic/iic_scl.v' 'peripherals/iic/iic_master.v' 'peripherals/iic/iic_slave.v' 'peripherals/iic/iic_top.v' 'peripherals/gpio_controller.v' 'peripherals/hl_adapter.v' 'peripherals/peripherals_bus.v' 'common/fifo_async.v' 'soc/digital_soc.v' 'soc/vboard_soc.v' 'testbench/soc_peripheral_bus_tb.v' '-o' '/tmp/cpu_v_build_kid/simv' 2>&1"
+298 FSDB_VCS_ENABLE_FAST_VC is enable
+299 sps_call_fsdbDumpvars_vd_main at 0 : testbench/soc_peripheral_bus_tb.v(246)
+300 argv[0]: (0)
+301 argv[1]: (handle) soc_peripheral_bus_tb
+302 [spi_vcs_vd_ppi_create_root]: no upf option
+303 FSDB dumper cannot dump UPF related power signal ($power_tree): no ppiPowerNetwork.
+304 *Verdi* : Begin traversing the scope (soc_peripheral_bus_tb), layer (0).
+305 *Verdi* : End of traversing.
+306 pliAppHDL_DumpVarComplete traverse var: profile - 
+          CPU/Mem usage: 0.080 sys,  0.310 user,  352.87M mem
+                   incr: 0.010 sys,  0.020 user,  8.61M mem
+                   accu: 0.010 sys,  0.020 user,  8.61M mem
+              accu incr: 0.010 sys,  0.020 user,  8.61M mem
 
-          Count usage: 1070 var,  790 idcode,  458 callback
-                 incr: 1070 var,  790 idcode,  458 callback
-                 accu: 1070 var,  790 idcode,  458 callback
-            accu incr: 1070 var,  790 idcode,  458 callback
-308 Thu Mar  5 19:38:43 2026
-309 pliAppHDL_DumpVarComplete: profile - 
-          CPU/Mem usage: 0.130 sys,  0.380 user,  353.92M mem
+          Count usage: 1082 var,  802 idcode,  470 callback
+                 incr: 1082 var,  802 idcode,  470 callback
+                 accu: 1082 var,  802 idcode,  470 callback
+            accu incr: 1082 var,  802 idcode,  470 callback
+307 Fri Mar  6 18:11:23 2026
+308 pliAppHDL_DumpVarComplete: profile - 
+          CPU/Mem usage: 0.080 sys,  0.310 user,  353.92M mem
                    incr: 0.000 sys,  0.000 user,  1.05M mem
-                   accu: 0.010 sys,  0.030 user,  9.54M mem
+                   accu: 0.010 sys,  0.020 user,  9.66M mem
               accu incr: 0.000 sys,  0.000 user,  1.05M mem
 
-          Count usage: 1070 var,  790 idcode,  458 callback
+          Count usage: 1082 var,  802 idcode,  470 callback
                  incr: 0 var,  0 idcode,  0 callback
-                 accu: 1070 var,  790 idcode,  458 callback
+                 accu: 1082 var,  802 idcode,  470 callback
             accu incr: 0 var,  0 idcode,  0 callback
-310 Thu Mar  5 19:38:43 2026
-311 sps_call_fsdbDumpMDA_vd_main at 0 : testbench/soc_peripheral_bus_tb.v(230)
-312 argv[0]: (0)
-313 argv[1]: (handle) soc_peripheral_bus_tb
-314 *Verdi* : Begin traversing the MDAs under scope (soc_peripheral_bus_tb), layer (0).
-315 *Verdi* : Enable +mda and +packedmda dumping.
-316 *Verdi* : End of traversing the MDAs.
-317 pliAppHDL_DumpVarComplete traverse var: profile - 
-          CPU/Mem usage: 0.140 sys,  0.390 user,  354.06M mem
-                   incr: 0.010 sys,  0.010 user,  0.14M mem
-                   accu: 0.010 sys,  0.010 user,  0.14M mem
-              accu incr: 0.010 sys,  0.010 user,  0.14M mem
+309 Fri Mar  6 18:11:23 2026
+310 sps_call_fsdbDumpMDA_vd_main at 0 : testbench/soc_peripheral_bus_tb.v(247)
+311 argv[0]: (0)
+312 argv[1]: (handle) soc_peripheral_bus_tb
+313 *Verdi* : Begin traversing the MDAs under scope (soc_peripheral_bus_tb), layer (0).
+314 *Verdi* : Enable +mda and +packedmda dumping.
+315 *Verdi* : End of traversing the MDAs.
+316 pliAppHDL_DumpVarComplete traverse var: profile - 
+          CPU/Mem usage: 0.080 sys,  0.320 user,  354.06M mem
+                   incr: 0.000 sys,  0.010 user,  0.14M mem
+                   accu: 0.000 sys,  0.010 user,  0.14M mem
+              accu incr: 0.000 sys,  0.010 user,  0.14M mem
 
-          Count usage: 8430 var,  8150 idcode,  497 callback
+          Count usage: 8442 var,  8162 idcode,  509 callback
                  incr: 7360 var,  7360 idcode,  39 callback
                  accu: 7360 var,  7360 idcode,  39 callback
             accu incr: 7360 var,  7360 idcode,  39 callback
-318 Thu Mar  5 19:38:43 2026
-319 pliAppHDL_DumpVarComplete: profile - 
-          CPU/Mem usage: 0.140 sys,  0.390 user,  354.33M mem
+317 Fri Mar  6 18:11:23 2026
+318 pliAppHDL_DumpVarComplete: profile - 
+          CPU/Mem usage: 0.080 sys,  0.320 user,  354.33M mem
                    incr: 0.000 sys,  0.000 user,  0.27M mem
-                   accu: 0.010 sys,  0.010 user,  0.41M mem
+                   accu: 0.000 sys,  0.010 user,  0.41M mem
               accu incr: 0.000 sys,  0.000 user,  0.27M mem
 
-          Count usage: 8430 var,  8150 idcode,  497 callback
+          Count usage: 8442 var,  8162 idcode,  509 callback
                  incr: 0 var,  0 idcode,  0 callback
                  accu: 7360 var,  7360 idcode,  39 callback
             accu incr: 0 var,  0 idcode,  0 callback
-320 Thu Mar  5 19:38:43 2026
-321 End of simulation at 10020000
-322 Thu Mar  5 19:38:43 2026
-323 Begin FSDB profile info:
-324 FSDB Writer : bc1(10953) bcn(19905) mtf/stf(0/0)
-FSDB Writer elapsed time : flush(0.016648) io wait(0.000000) theadpool wait(0.000000) target functin(0.000000)
+319 Fri Mar  6 18:11:23 2026
+320 End of simulation at 15020000
+321 Fri Mar  6 18:11:24 2026
+322 Begin FSDB profile info:
+323 FSDB Writer : bc1(12997) bcn(23518) mtf/stf(0/0)
+FSDB Writer elapsed time : flush(0.011880) io wait(0.000000) theadpool wait(0.000000) target functin(0.000000)
 FSDB Writer cpu time : MT Compression : 0
-325 End FSDB profile info
-326 Parallel profile    -  Flush:4 Expand:0 ProduceWait:0 ConsumerWait:0 BlockUsed:0
-327                        ProduceTime:0.740967490 ConsumerTime:0.000000000 Buffer:64MB
-328 SimExit
-329 Sim process exit
+324 End FSDB profile info
+325 Parallel profile    -  Flush:4 Expand:0 ProduceWait:0 ConsumerWait:0 BlockUsed:0
+326                        ProduceTime:0.649115589 ConsumerTime:0.000000000 Buffer:64MB
+327 SimExit
+328 Sim process exit
